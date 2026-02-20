@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+fmfinance/__init__.py
+fmfinance/_utils.py
+fmfinance/_version.py
+fmfinance/fama_french.py
+fmfinance/fred.py
+fmfinance.egg-info/PKG-INFO
+fmfinance.egg-info/SOURCES.txt
+fmfinance.egg-info/dependency_links.txt
+fmfinance.egg-info/requires.txt
+fmfinance.egg-info/top_level.txt
