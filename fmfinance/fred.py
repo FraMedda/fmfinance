@@ -3,7 +3,7 @@ import requests
 import io
 from ._utils import apply_cooldown
 
-def FredReader(symbols, start, end=None, freq=None, agg=None, units=None, cooldown=1.2):
+def fred(symbols, start, end=None, freq=None, agg=None, units=None, cooldown=1.2):
     valid_freqs = {'d': 'Daily', 'w': 'Weekly', 'm': 'Monthly', 'q': 'Quarterly', 'a': 'Annual'}
     actual_fq = None
     if isinstance(freq, str):

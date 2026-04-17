@@ -5,13 +5,16 @@ import re
 import zipfile
 from ._utils import apply_cooldown
 
-def FFSearch(search=None):
+def ff_search(search=None):
     url = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html"
     try:
         resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+        resp.raise_for_status()
         all_names = sorted(list(set(re.compile(r'ftp/([\w-]+)_CSV\.zip').findall(resp.text))))
+        
         if not search:
-            for name in all_names: print(name)
+            for name in all_names:
+                print(name)
             return
         
         search_lower = search.lower()
@@ -23,24 +26,29 @@ def FFSearch(search=None):
         }
         
         sugg = [n for k, v in shortcuts.items() if k in search_lower for n in v if n in all_names]
-        others = [n for n in all_names if all(t in n.lower().replace('_',' ') for t in search_lower.split()) and n not in sugg]
+        others = [n for n in all_names if all(t in n.lower().replace('_', ' ') for t in search_lower.split()) and n not in sugg]
         
         print(f"\nResults for: '{search}'\n" + "-"*30)
         if sugg:
-            print("SUGGESTIONS:"); [print(f" > {s}") for s in set(sugg)]
+            print("SUGGESTIONS:")
+            for s in set(sugg):
+                print(f" > {s}")
         if others:
-            print("\nOTHER MATCHES:"); [print(f" > {o}") for o in others]
-    except Exception as e: print(f"Error: {e}")
+            print("\nOTHER MATCHES:")
+            for o in others:
+                print(f" > {o}")
+    except Exception as e:
+        print(f"Error searching datasets: {e}")
 
-def FFReader(dataset_name, start, end=None, cooldown=1.2):
+def ff(dataset_name, start, end=None, cooldown=1.2):
     if dataset_name == 'F-F_Research_Data_Factors_Yearly':
-        data = FFReader('F-F_Research_Data_Factors', start, end, cooldown)
+        data = ff('F-F_Research_Data_Factors', start, end, cooldown)
         return {0: data.get(1, pd.DataFrame()), "DESCR": "Fama-French 3 Factors (Annual)"}
     
     if '4_factors' in dataset_name:
         suffix, idx = ("_daily", 0) if 'daily' in dataset_name else ("", 1 if 'Yearly' in dataset_name else 0)
-        ff3_all = FFReader(f'F-F_Research_Data_Factors{suffix}', start, end, cooldown)
-        mom_all = FFReader(f'F-F_Momentum_Factor{suffix}', start, end, cooldown)
+        ff3_all = ff(f'F-F_Research_Data_Factors{suffix}', start, end, cooldown)
+        mom_all = ff(f'F-F_Momentum_Factor{suffix}', start, end, cooldown)
         ff3, mom = ff3_all.get(idx, pd.DataFrame()), mom_all.get(idx, pd.DataFrame())
         combined = pd.concat([ff3, mom], axis=1, join='inner')
         cols = [c for c in combined.columns if c != 'RF'] + ['RF']

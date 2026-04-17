@@ -1,5 +1,5 @@
 from ._version import __version__
-from .fred import FredReader
-from .fama_french import FFReader, FFSearch
+from .fred import fred
+from .fama_french import ff, ff_search
 
-__all__ = ["FredReader", "FFReader", "FFSearch", "__version__"]
+__all__ = ["ff", "fred", "ff_search", "__version__"]
