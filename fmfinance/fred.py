@@ -17,6 +17,7 @@ def fred(symbols, start, end=None, freq=None, agg=None, units=None, cooldown=1.2
     actual_units = units.lower() if units in {'lin', 'chg', 'pch', 'pca', 'cch', 'cca'} else None
     names = [symbols] if isinstance(symbols, str) else symbols
     series_list = []
+    session = requests.Session()
 
     for name in names:
         if len(series_list) > 0: apply_cooldown(cooldown)
@@ -25,7 +26,8 @@ def fred(symbols, start, end=None, freq=None, agg=None, units=None, cooldown=1.2
         if actual_units: url += f"&transformation={actual_units}"
         if actual_fq: url += f"&fq={actual_fq}"
         try:
-            resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+            resp = session.get(url, timeout=10)
+            resp.raise_for_status()
             data = pd.read_csv(io.StringIO(resp.text), index_col=0, parse_dates=True, 
                                header=None, skiprows=1, names=["DATE", name], na_values=".")
             data = data[data.index >= pd.to_datetime(start)]
@@ -34,6 +36,7 @@ def fred(symbols, start, end=None, freq=None, agg=None, units=None, cooldown=1.2
         except Exception as e:
             print(f"Warning: could not download '{name}': {e}")
             continue
+
     if not series_list:
         print("Warning: no data was downloaded.")
         return pd.DataFrame()
