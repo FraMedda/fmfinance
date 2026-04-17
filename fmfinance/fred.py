@@ -3,7 +3,7 @@ import requests
 import io
 from ._utils import apply_cooldown
 
-def FredReader(symbols, start, end=None, freq=None, agg='avg', units='lin', cooldown=1.2):
+def FredReader(symbols, start, end=None, freq=None, agg=None, units=None, cooldown=1.2):
     valid_freqs = {'d': 'Daily', 'w': 'Weekly', 'm': 'Monthly', 'q': 'Quarterly', 'a': 'Annual'}
     actual_fq = None
     if isinstance(freq, str):
@@ -13,14 +13,16 @@ def FredReader(symbols, start, end=None, freq=None, agg='avg', units='lin', cool
                 actual_fq = value
                 break
     
-    actual_agg = agg.lower() if agg in {'avg', 'sum', 'eop'} else 'avg'
-    actual_units = units.lower() if units in {'lin', 'chg', 'pch', 'pca', 'cch', 'cca'} else 'lin'
+    actual_agg = agg.lower() if agg in {'avg', 'sum', 'eop'} else None
+    actual_units = units.lower() if units in {'lin', 'chg', 'pch', 'pca', 'cch', 'cca'} else None
     names = [symbols] if isinstance(symbols, str) else symbols
     series_list = []
 
     for name in names:
         if len(series_list) > 0: apply_cooldown(cooldown)
-        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={name}&aggregationmethod={actual_agg}&transformation={actual_units}"
+        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={name}"
+        if actual_agg: url += f"&aggregationmethod={actual_agg}"
+        if actual_units: url += f"&transformation={actual_units}"
         if actual_fq: url += f"&fq={actual_fq}"
         try:
             resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
@@ -29,5 +31,10 @@ def FredReader(symbols, start, end=None, freq=None, agg='avg', units='lin', cool
             data = data[data.index >= pd.to_datetime(start)]
             if end: data = data[data.index <= pd.to_datetime(end)]
             series_list.append(data)
-        except Exception: continue
-    return pd.concat(series_list, axis=1, join="outer") if series_list else pd.DataFrame()
+        except Exception as e:
+            print(f"Warning: could not download '{name}': {e}")
+            continue
+    if not series_list:
+        print("Warning: no data was downloaded.")
+        return pd.DataFrame()
+    return pd.concat(series_list, axis=1, join="outer")

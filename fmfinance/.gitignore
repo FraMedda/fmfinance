@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Build e distribuzione
+dist/
+build/
+*.egg-info/
+
+# VS Code
+.vscode/
+
+# Ambiente virtuale personale
+pyvenv.cfg
+
+# File di sistema
+.DS_Store
+Thumbs.db

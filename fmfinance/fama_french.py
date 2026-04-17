@@ -50,6 +50,7 @@ def FFReader(dataset_name, start, end=None, cooldown=1.2):
     url = f"https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/{dataset_name}_CSV.zip"
     try:
         resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        resp.raise_for_status()
         with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
             raw_data = zf.read(zf.namelist()[0]).decode('utf-8', errors='replace')
         chunks = raw_data.split("\r\n\r\n")
@@ -65,4 +66,6 @@ def FFReader(dataset_name, start, end=None, cooldown=1.2):
             res[i] = df.apply(pd.to_numeric, errors='coerce')
         res["DESCR"] = f"Dataset: {dataset_name}"
         return res
-    except: return {0: pd.DataFrame(), "DESCR": "Error"}
+    except Exception as e:
+        print(f"Error downloading '{dataset_name}': {e}")
+        return {0: pd.DataFrame(), "DESCR": "Error"}
