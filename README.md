@@ -9,7 +9,7 @@ A lightweight Python package to fetch financial data from the **Kenneth French D
 ## Installation
 
 ```bash
-pip install git+https://github.com/FraMedda/fmfinance.git
+pip install https://github.com/FraMedda/fmfinance/archive/refs/heads/main.zip
 ```
 
 For local/development use:
