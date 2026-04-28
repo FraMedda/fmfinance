@@ -40,6 +40,17 @@ data = fm.ff("F-F_Research_Data_Factors", start="2000-01-01", end="2020-12-31")
 # Download daily data
 data = fm.ff("F-F_Research_Data_Factors_daily", start="2020-01-01")
 ```
+## Custom Dataset Names
+
+Some dataset names are handled internally and do not correspond to files on the French library:
+
+| Name | Description |
+|---|---|
+| `F-F_Research_Data_Factors_Yearly` | Annual version of the FF3 factors |
+| `4_factors` | Carhart 4-factor model (monthly) |
+| `4_factors_daily` | Carhart 4-factor model (daily) |
+| `4_factors_Yearly` | Carhart 4-factor model (annual) |
+
 
 ### FRED data
 

@@ -19,9 +19,9 @@ def ff_search(search=None):
         
         search_lower = search.lower()
         shortcuts = {
-            "3 factors": ["F-F_Research_Data_Factors"],
-            "4 factors": ["F-F_Momentum_Factor"],
-            "carhart": ["F-F_Momentum_Factor"],
+            "3 factors": ["F-F_Research_Data_Factors", "F-F_Research_Data_Factors_daily", "F-F_Research_Data_Factors_weekly"],
+            "4 factors": ["F-F_Momentum_Factor", "F-F_Momentum_Factor_daily"],
+            "carhart": ["F-F_Momentum_Factor", "F-F_Momentum_Factor_daily"],
             "25": ["25_Portfolios_5x5"]
         }
         
@@ -41,6 +41,11 @@ def ff_search(search=None):
         print(f"Error searching datasets: {e}")
 
 def ff(dataset_name, start, end=None, cooldown=1.2):
+    # Custom dataset names (not available on French's website):
+    # 'F-F_Research_Data_Factors_Yearly' -> annual table from F-F_Research_Data_Factors
+    # '4_factors'                        -> Carhart 4-factor (FF3 + Momentum), monthly
+    # '4_factors_daily'                  -> Carhart 4-factor (FF3 + Momentum), daily
+    # '4_factors_Yearly'                 -> Carhart 4-factor (FF3 + Momentum), annual
     if dataset_name == 'F-F_Research_Data_Factors_Yearly':
         data = ff('F-F_Research_Data_Factors', start, end, cooldown)
         return {0: data.get(1, pd.DataFrame()), "DESCR": "Fama-French 3 Factors (Annual)"}
@@ -62,18 +67,33 @@ def ff(dataset_name, start, end=None, cooldown=1.2):
         with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
             raw_data = zf.read(zf.namelist()[0]).decode('utf-8', errors='replace')
         chunks = raw_data.split("\r\n\r\n")
-        tables = [c for c in chunks if c.strip() and (len(c) >= 800 or re.search(r"^\s*,", c, re.M))]
+        tables = [c for c in chunks if c.strip() and re.search(r"^\s*\d{4,8}\s*,", c, re.M)]
         res = {}
         for i, src in enumerate(tables):
             match = re.search(r"^\s*,", src, re.M)
             df = pd.read_csv(io.StringIO("Date" + src[match.start():] if match else src), index_col=0)
-            df.index = pd.to_datetime(df.index.astype(str).str.replace(".0", "").str.strip(), errors='coerce', 
-                                     format="%Y" if len(str(df.index[0]))<=4 else "%Y%m" if len(str(df.index[0]))==6 else "%Y%m%d")
+            
+            if df.index.empty:
+                res[i] = pd.DataFrame()
+                continue
+            
+            sample = str(df.index[0]).strip().replace(".0", "")
+            if len(sample) <= 4:
+                date_format = "%Y"
+            elif len(sample) == 6:
+                date_format = "%Y%m"
+            else:
+                date_format = "%Y%m%d"
+            
+            df.index = pd.to_datetime(df.index.astype(str).str.replace(".0", "").str.strip(), errors='coerce', format=date_format)
             df = df[df.index.notnull() & (df.index >= pd.to_datetime(start))]
             if end: df = df[df.index <= pd.to_datetime(end)]
             res[i] = df.apply(pd.to_numeric, errors='coerce')
         res["DESCR"] = f"Dataset: {dataset_name}"
         return res
     except Exception as e:
-        print(f"Error downloading '{dataset_name}': {e}")
+        if "404" in str(e) or "Bad request" in str(e).lower():
+            print(f"Dataset '{dataset_name}' not found. Use ff_search() to find valid dataset names.")
+        else:
+            print(f"Error downloading '{dataset_name}': {e}")
         return {0: pd.DataFrame(), "DESCR": "Error"}

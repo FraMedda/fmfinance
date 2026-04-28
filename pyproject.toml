@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fmfinance"
-version = "0.0.2"
+version = "0.0.3"
 description = "Financial data utilities for Fama-French and FRED by Francesco M."
 readme = "README.md"
 requires-python = ">=3.8"
