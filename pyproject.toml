@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fmfinance"
-version = "0.0.3"
-description = "Financial data utilities for Fama-French and FRED by Francesco M."
+version = "0.0.4"
+description = "Financial data utilities for Fama-French, FRED and cross-section bootstrap by Francesco M."
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
   {name = "Francesco Medda"}
 ]
-keywords = ["fama-french", "fred", "finance", "economics"]
+keywords = ["fama-french", "fred", "finance", "economics", "bootstrap", "mutual-funds"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
@@ -21,6 +21,7 @@ classifiers = [
 dependencies = [
     "pandas>=2.0",
     "requests>=2.28",
+    "numpy>=1.24",
 ]
 
 [project.urls]
