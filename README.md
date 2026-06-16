@@ -107,7 +107,7 @@ Returns a `dict` where keys are integers (one per table in the dataset) and `"DE
 ### `ff_search(search=None)`
 Searches available datasets in the French library. If `search` is `None`, prints all available datasets.
 
-### `fred(symbols, start, end=None, freq=None, agg=None, units=None, cooldown=1.2)`
+### `fred(symbols, start, end=None, freq=None, agg=None, units=None, cooldown=1.2, api_key=None)`
 | Parameter | Type | Description |
 |---|---|---|
 | `symbols` | str or list | One or more FRED series IDs |
@@ -115,15 +115,16 @@ Searches available datasets in the French library. If `search` is `None`, prints
 | `end` | str | End date (optional) |
 | `freq` | str | Frequency: `'d'`, `'w'`, `'m'`, `'q'`, `'a'` (optional) |
 | `agg` | str | Aggregation method: `'avg'`, `'sum'`, `'eop'` (optional) |
-| `units` | str | Transformation: `'lin'`, `'chg'`, `'pch'`, `'pca'`, `'cch'`, `'cca'` (optional) |
+| `units` | str | Transformation: `'lin'`, `'chg'`, `'ch1'`, `'pch'`, `'pc1'`, `'pca'`, `'cch'`, `'cca'`, `'log'` (optional) |
 | `cooldown` | float | Seconds to wait between requests (default 1.2) |
+| `api_key` | str | FRED API key (optional, defaults to `FRED_API_KEY` env variable) |
 
 Returns a `pandas.DataFrame` with one column per series.
+
 **Notes:**
-- Data is sourced via the [FRED CSV Gateway](https://www.ivo-welch.info/professional/fredcsv.html) (cached, refreshed every 12h).
-- `freq`, `agg`, and `units` are applied client-side in pandas; results may differ slightly from FRED's server-side transformations.
+- Data is sourced via the [official FRED API](https://fred.stlouisfed.org/docs/api/fred/). Requires a free API key.
+- `freq`, `agg`, and `units` are processed server-side by FRED.
 - `freq` without `agg` defaults to `'avg'`.
-- `units='pca'` and `units='cca'` require `freq` to be specified.
 
 ### `bootstrap(factors, funds, n_boot, min_obs=36)`
 | Parameter | Type | Description |
