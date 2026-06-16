@@ -119,6 +119,11 @@ Searches available datasets in the French library. If `search` is `None`, prints
 | `cooldown` | float | Seconds to wait between requests (default 1.2) |
 
 Returns a `pandas.DataFrame` with one column per series.
+**Notes:**
+- Data is sourced via the [FRED CSV Gateway](https://www.ivo-welch.info/professional/fredcsv.html) (cached, refreshed every 12h).
+- `freq`, `agg`, and `units` are applied client-side in pandas; results may differ slightly from FRED's server-side transformations.
+- `freq` without `agg` defaults to `'avg'`.
+- `units='pca'` and `units='cca'` require `freq` to be specified.
 
 ### `bootstrap(factors, funds, n_boot, min_obs=36)`
 | Parameter | Type | Description |
