@@ -110,17 +110,17 @@ def _ff_momentum(dataset_name, start, end, cooldown):
         raw = zf.read(zf.namelist()[0]).decode('utf-8', errors='replace')
 
     # righe 'data,valore' + testo di testa come descrizione
-    rows, descr = [], []
+    rows, descr, in_data = [], [], False
     for line in raw.splitlines():
-        parts = line.strip().split(',')
-        is_data = False
-        if len(parts) == 2 and parts[0].strip().isdigit():
+        parts = [p.strip() for p in line.split(',') if p.strip() != '']
+        if len(parts) == 2 and parts[0].isdigit():
             try:
-                rows.append((parts[0].strip(), float(parts[1])))
-                is_data = True
+                rows.append((parts[0], float(parts[1])))
+                in_data = True
+                continue
             except ValueError:
                 pass
-        if not is_data and not rows and line.strip() and not line.strip().startswith(','):
+        if not in_data and line.strip():
             descr.append(line.strip())
 
     res = {}
