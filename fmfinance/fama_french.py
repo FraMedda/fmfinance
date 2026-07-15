@@ -109,8 +109,19 @@ def _ff_momentum(dataset_name, start, end, cooldown):
     with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
         raw = zf.read(zf.namelist()[0]).decode('utf-8', errors='replace')
 
-    # solo le righe 'data,valore': niente header da indovinare
-    rows = re.findall(r"^\s*(\d{4,8})\s*,\s*(-?[\d.]+)\s*$", raw, re.M)
+    # righe 'data,valore' + testo di testa come descrizione
+    rows, descr = [], []
+    for line in raw.splitlines():
+        parts = line.strip().split(',')
+        is_data = False
+        if len(parts) == 2 and parts[0].strip().isdigit():
+            try:
+                rows.append((parts[0].strip(), float(parts[1])))
+                is_data = True
+            except ValueError:
+                pass
+        if not is_data and not rows and line.strip() and not line.strip().startswith(','):
+            descr.append(line.strip())
 
     res = {}
     for n, fmt in [(8, "%Y%m%d"), (6, "%Y%m"), (4, "%Y")]:
@@ -119,10 +130,10 @@ def _ff_momentum(dataset_name, start, end, cooldown):
             continue
         df = pd.DataFrame(sub, columns=["Date", "Mom"])
         df.index = pd.to_datetime(df.pop("Date"), format=fmt, errors='coerce')
-        df["Mom"] = pd.to_numeric(df["Mom"], errors='coerce')
         df = df[df.index.notnull() & (df.index >= pd.to_datetime(start))]
         if end:
             df = df[df.index <= pd.to_datetime(end)]
         res[len(res)] = df
-    res["DESCR"] = f"Dataset: {dataset_name}"
+
+    res["DESCR"] = f"Dataset: {dataset_name}\n" + "\n".join(descr)
     return res
