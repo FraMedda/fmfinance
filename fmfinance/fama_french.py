@@ -58,6 +58,9 @@ def ff(dataset_name, start, end=None, cooldown=1.2):
         combined = pd.concat([ff3, mom], axis=1, join='inner')
         cols = [c for c in combined.columns if c != 'RF'] + ['RF']
         return {0: combined[cols], "DESCR": "Carhart 4-Factor Model"}
+    
+    if 'Momentum' in dataset_name:
+        return _ff_momentum(dataset_name, start, end, cooldown)
 
     apply_cooldown(cooldown)
     url = f"https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/{dataset_name}_CSV.zip"
@@ -97,3 +100,29 @@ def ff(dataset_name, start, end=None, cooldown=1.2):
         else:
             print(f"Error downloading '{dataset_name}': {e}")
         return {0: pd.DataFrame(), "DESCR": "Error"}
+    
+def _ff_momentum(dataset_name, start, end, cooldown):
+    apply_cooldown(cooldown)
+    url = f"https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/{dataset_name}_CSV.zip"
+    resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+    resp.raise_for_status()
+    with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
+        raw = zf.read(zf.namelist()[0]).decode('utf-8', errors='replace')
+
+    # solo le righe 'data,valore': niente header da indovinare
+    rows = re.findall(r"^\s*(\d{4,8})\s*,\s*(-?[\d.]+)\s*$", raw, re.M)
+
+    res = {}
+    for n, fmt in [(8, "%Y%m%d"), (6, "%Y%m"), (4, "%Y")]:
+        sub = [(d, v) for d, v in rows if len(d) == n]
+        if not sub:
+            continue
+        df = pd.DataFrame(sub, columns=["Date", "Mom"])
+        df.index = pd.to_datetime(df.pop("Date"), format=fmt, errors='coerce')
+        df["Mom"] = pd.to_numeric(df["Mom"], errors='coerce')
+        df = df[df.index.notnull() & (df.index >= pd.to_datetime(start))]
+        if end:
+            df = df[df.index <= pd.to_datetime(end)]
+        res[len(res)] = df
+    res["DESCR"] = f"Dataset: {dataset_name}"
+    return res
